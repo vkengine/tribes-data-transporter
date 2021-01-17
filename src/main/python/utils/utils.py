@@ -7,10 +7,14 @@ class Utils:
     _gremlin_add_vertex = "g.addV('id','{IdUnique}').{properties_formulated}"
     _gremlin_add_property = "property('{property_name}','{property_value}')"
 
+    _gremlin_add_edge = "g.V().has('label',TextP.startingWith('{FromLabel}')).has('IdObject','{FromIdObject}')"\
+                        ".addE('{IdUnique}')" \
+                        ".to(g.V().has('label',TextP.startingWith('{ToLabel}')).has('IdObject','{ToIdObject}'))" \
+                        ".{properties_formulated}"
+
     @staticmethod
-    def add_vertex(client, query):
-        print("\tRunning this Gremlin query:\n\t{0}\n".format(query))
-        time.sleep(2)
+    def add_vertex_and_edge(client, query):
+        time.sleep(1)
         callback = client.submitAsync(query)
         if callback.result() is not None:
             print("\tInserted this vertex:\n\t{0}\n".format(
@@ -18,11 +22,20 @@ class Utils:
         else:
             print("Something went wrong with this query: {0}".format(query))
 
-
-
     @staticmethod
     def generate_add_edge_query(row):
-        pass
+        properties_unformulated = row['Property']
+        list_of_properties = []
+        for key, value in properties_unformulated.items():
+            list_of_properties.append(Utils._gremlin_add_property.format(property_name=key, property_value=value))
+        properties = ".".join(list_of_properties)
+        query = Utils._gremlin_add_edge.format(FromLabel=row['FromLabel'],
+                                               FromIdObject=row['FromIdObject'],
+                                               IdUnique=row['IdUnique'],
+                                               ToLabel=row['ToLabel'],
+                                               ToIdObject=row['ToIdObject'],
+                                               properties_formulated=properties)
+        return query
 
     @staticmethod
     def generate_add_vertex_query(row):
@@ -58,4 +71,16 @@ class Utils:
             for row in records:
                 if row['Kind'] == 'node':
                     query = Utils.generate_add_vertex_query(row)
-                    Utils.add_vertex(gremlin_conn, query)
+                    Utils.add_vertex_and_edge(gremlin_conn, query)
+
+    @staticmethod
+    def read_files_and_create_edges(gremlin_conn):
+        files = ['file-1.json', 'file-2.json', 'file-3.json']
+        for file in files:
+            file_name = '/Users/vanketeshkumar/Projects/tribes-data-transporter/resources/{file_name}' \
+                .format(file_name=file)
+            records = json.load(open(file_name))
+            for row in records:
+                if row['Kind'] == 'relationship':
+                    query = Utils.generate_add_edge_query(row)
+                    Utils.add_vertex_and_edge(gremlin_conn, query)
