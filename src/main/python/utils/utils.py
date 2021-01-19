@@ -7,7 +7,7 @@ class Utils:
     _gremlin_add_vertex = "g.addV('id','{IdUnique}').{properties_formulated}"
     _gremlin_add_property = "property('{property_name}','{property_value}')"
 
-    _gremlin_add_edge = "g.V().has('label',TextP.startingWith('{FromLabel}')).has('IdObject','{FromIdObject}')"\
+    _gremlin_add_edge = "g.V().has('label',TextP.startingWith('{FromLabel}')).has('IdObject','{FromIdObject}')" \
                         ".addE('{IdUnique}')" \
                         ".to(g.V().has('label',TextP.startingWith('{ToLabel}')).has('IdObject','{ToIdObject}'))" \
                         ".{properties_formulated}"
@@ -17,7 +17,7 @@ class Utils:
         time.sleep(1)
         callback = client.submitAsync(query)
         if callback.result() is not None:
-            print("\tInserted this vertex:\n\t{0}\n".format(
+            print("\tAdded:\n\t{0}\n".format(
                 callback.result().one()))
         else:
             print("Something went wrong with this query: {0}".format(query))
@@ -51,8 +51,13 @@ class Utils:
         return query
 
     @staticmethod
-    def execute_query():
-        pass
+    def check_egde_exits(client, unique_id):
+        query = "g.E().has('label','{IdUnique}')".format(IdUnique=unique_id)
+        callback = client.submitAsync(query)
+        if str(callback.result().one()) == "[]":
+            return False
+        else:
+            return True
 
     @staticmethod
     def cleanup_graph(client):
@@ -82,5 +87,9 @@ class Utils:
             records = json.load(open(file_name))
             for row in records:
                 if row['Kind'] == 'relationship':
+                    exists = Utils.check_egde_exits(gremlin_conn, row['IdUnique'])
                     query = Utils.generate_add_edge_query(row)
-                    Utils.add_vertex_and_edge(gremlin_conn, query)
+                    if exists and row['DeDuplication']:
+                        continue
+                    else:
+                        Utils.add_vertex_and_edge(gremlin_conn, query)

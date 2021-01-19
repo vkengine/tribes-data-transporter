@@ -1,15 +1,20 @@
 __author__ = 'v-kumar (v.kmr@yahoo.com)'
 
 from gremlin_python.driver import serializer
+import os
+
+"""
+please set URL, USERNAME and PASSWORD in system before execution
+"""
 
 
 class Connection:
 
     def __init__(self):
-        self._url = 'wss://tdt.gremlin.cosmos.azure.com:443/'
+        self._url = os.environ['URL']
         self._traversal_source = 'g'
-        self._user_name = '/dbs/tribes/colls/tribes-data-transporter'
-        self._password = 'svzdwqiAcPcaX5wiz93qFm3z05QO3C7GLq0XM47YjT8gzNJuDND77LxXi7o8Y8eu8Tz4qx1HASmnKBACm98GpQ=='
+        self._user_name = os.environ['USERNAME']
+        self._password = os.environ['PASSWORD']
         self._message_serializer = serializer.GraphSONSerializersV2d0()
 
     def get_url(self):
