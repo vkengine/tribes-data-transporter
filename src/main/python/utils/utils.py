@@ -1,5 +1,6 @@
 import json
 import time
+import defination
 
 
 class Utils:
@@ -70,8 +71,8 @@ class Utils:
     def read_files_and_create_vertex(gremlin_conn):
         files = ['file-1.json', 'file-2.json', 'file-3.json']
         for file in files:
-            file_name = '/Users/vanketeshkumar/Projects/tribes-data-transporter/resources/{file_name}' \
-                .format(file_name=file)
+            file_name = '{base_path}/resources/{file_name}' \
+                .format(base_path=defination.get_root_path(),file_name=file)
             records = json.load(open(file_name))
             for row in records:
                 if row['Kind'] == 'node':
@@ -82,8 +83,8 @@ class Utils:
     def read_files_and_create_edges(gremlin_conn):
         files = ['file-1.json', 'file-2.json', 'file-3.json']
         for file in files:
-            file_name = '/Users/vanketeshkumar/Projects/tribes-data-transporter/resources/{file_name}' \
-                .format(file_name=file)
+            file_name = '{base_path}/resources/{file_name}' \
+                .format(base_path=defination.get_root_path(), file_name=file)
             records = json.load(open(file_name))
             for row in records:
                 if row['Kind'] == 'relationship':
